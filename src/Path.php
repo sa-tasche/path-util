@@ -42,16 +42,16 @@ final class Path
     /**
      * Buffers input/output of {@link canonicalize()}.
      *
-     * @var array
+     * @var iterable
      */
-    private static $buffer = array();
+    private static iterable $buffer = [];
 
     /**
      * The size of the buffer.
      *
      * @var int
      */
-    private static $bufferSize = 0;
+    private static int $bufferSize = 0;
 
     /**
      * Canonicalizes the given path.
@@ -78,17 +78,15 @@ final class Path
      * @since 2.0 Method now fails if $path is not a string.
      * @since 2.1 Added support for `~`.
      */
-    public static function canonicalize($path)
+    public static function canonicalize(string $path): string
     {
         if ('' === $path) {
             return '';
         }
 
-        Assert::string($path, 'The path must be a string. Got: %s');
-
-        // This method is called by many other methods in this class. Buffer
-        // the canonicalized paths to make up for the severe performance
-        // decrease.
+        // This method is called by many other methods in this class.
+        // Buffer the canonicalized paths to make up for the severe
+        // performance decrease.
         if (isset(self::$buffer[$path])) {
             return self::$buffer[$path];
         }
@@ -100,10 +98,10 @@ final class Path
 
         $path = str_replace('\\', '/', $path);
 
-        list($root, $pathWithoutRoot) = self::split($path);
+        [$root, $pathWithoutRoot] = self::split($path);
 
         $parts = explode('/', $pathWithoutRoot);
-        $canonicalParts = array();
+        $canonicalParts = [];
 
         // Collapse "." and "..", if possible
         foreach ($parts as $part) {
@@ -156,10 +154,8 @@ final class Path
      *
      * @since 2.2 Added method.
      */
-    public static function normalize($path)
+    public static function normalize(string $path): string
     {
-        Assert::string($path, 'The path must be a string. Got: %s');
-
         return str_replace('\\', '/', $path);
     }
 
@@ -191,7 +187,7 @@ final class Path
      * @since 1.0 Added method.
      * @since 2.0 Method now fails if $path is not a string.
      */
-    public static function getDirectory($path)
+    public static function getDirectory(string $path): string
     {
         if ('' === $path) {
             return '';
@@ -242,7 +238,7 @@ final class Path
      *
      * @since 2.1 Added method.
      */
-    public static function getHomeDirectory()
+    public static function getHomeDirectory(): string
     {
         // For UNIX support
         if (getenv('HOME')) {
@@ -254,7 +250,7 @@ final class Path
             return static::canonicalize(getenv('HOMEDRIVE').getenv('HOMEPATH'));
         }
 
-        throw new RuntimeException("Your environment or operation system isn't supported");
+        throw new RuntimeException('Your environment or operation system isn\'t supported');
     }
 
     /**
@@ -270,13 +266,11 @@ final class Path
      * @since 1.0 Added method.
      * @since 2.0 Method now fails if $path is not a string.
      */
-    public static function getRoot($path)
+    public static function getRoot(string $path): string
     {
         if ('' === $path) {
             return '';
         }
-
-        Assert::string($path, 'The path must be a string. Got: %s');
 
         // Maintain scheme
         if (false !== ($pos = strpos($path, '://'))) {
@@ -319,13 +313,11 @@ final class Path
      * @since 1.1 Added method.
      * @since 2.0 Method now fails if $path is not a string.
      */
-    public static function getFilename($path)
+    public static function getFilename(string $path): string
     {
         if ('' === $path) {
             return '';
         }
-
-        Assert::string($path, 'The path must be a string. Got: %s');
 
         return basename($path);
     }
@@ -342,14 +334,11 @@ final class Path
      * @since 1.1 Added method.
      * @since 2.0 Method now fails if $path or $extension have invalid types.
      */
-    public static function getFilenameWithoutExtension($path, $extension = null)
+    public static function getFilenameWithoutExtension(string $path, ?string $extension = null): string
     {
         if ('' === $path) {
             return '';
         }
-
-        Assert::string($path, 'The path must be a string. Got: %s');
-        Assert::nullOrString($extension, 'The extension must be a string or null. Got: %s');
 
         if (null !== $extension) {
             // remove extension and trailing dot
@@ -372,13 +361,11 @@ final class Path
      * @since 1.1 Added method.
      * @since 2.0 Method now fails if $path is not a string.
      */
-    public static function getExtension($path, $forceLowerCase = false)
+    public static function getExtension(string $path, bool $forceLowerCase = false): string
     {
         if ('' === $path) {
             return '';
         }
-
-        Assert::string($path, 'The path must be a string. Got: %s');
 
         $extension = pathinfo($path, PATHINFO_EXTENSION);
 
@@ -393,10 +380,10 @@ final class Path
      * Returns whether the path has an extension.
      *
      * @param string            $path       The path string.
-     * @param string|array|null $extensions If null or not provided, checks if
+     * @param string|iterable|null $extensions If null or not provided, checks if
      *                                      an extension exists, otherwise
      *                                      checks for the specified extension
-     *                                      or array of extensions (with or
+     *                                      or iterable of extensions (with or
      *                                      without leading dot).
      * @param bool              $ignoreCase Whether to ignore case-sensitivity
      *                                      (requires mbstring extension for
@@ -409,13 +396,13 @@ final class Path
      * @since 1.1 Added method.
      * @since 2.0 Method now fails if $path or $extensions have invalid types.
      */
-    public static function hasExtension($path, $extensions = null, $ignoreCase = false)
+    public static function hasExtension(string $path, $extensions = null, $ignoreCase = false): bool
     {
         if ('' === $path) {
             return false;
         }
 
-        $extensions = is_object($extensions) ? array($extensions) : (array) $extensions;
+        $extensions = is_object($extensions) ? [$extensions] : (array) $extensions;
 
         Assert::allString($extensions, 'The extensions must be strings. Got: %s');
 
@@ -431,7 +418,7 @@ final class Path
                 $extension = self::toLower($extension);
             }
 
-            // remove leading '.' in extensions array
+            // remove leading '.' in extensions iterable
             $extensions[$key] = ltrim($extension, '.');
         }
 
@@ -449,13 +436,11 @@ final class Path
      * @since 1.1 Added method.
      * @since 2.0 Method now fails if $path or $extension is not a string.
      */
-    public static function changeExtension($path, $extension)
+    public static function changeExtension(string $path, string $extension): string
     {
         if ('' === $path) {
             return '';
         }
-
-        Assert::string($extension, 'The extension must be a string. Got: %s');
 
         $actualExtension = self::getExtension($path);
         $extension = ltrim($extension, '.');
@@ -484,7 +469,7 @@ final class Path
      * @since 1.0 Added method.
      * @since 2.0 Method now fails if $path is not a string.
      */
-    public static function isAbsolute($path)
+    public static function isAbsolute(string $path): bool
     {
         if ('' === $path) {
             return false;
@@ -529,7 +514,7 @@ final class Path
      * @since 1.0 Added method.
      * @since 2.0 Method now fails if $path is not a string.
      */
-    public static function isRelative($path)
+    public static function isRelative(string $path): bool
     {
         return !static::isAbsolute($path);
     }
@@ -579,7 +564,7 @@ final class Path
      * @since 2.2.2 Method does not fail anymore of $path and $basePath are
      *              absolute, but on different partitions.
      */
-    public static function makeAbsolute($path, $basePath)
+    public static function makeAbsolute(string $path, string $basePath): string
     {
         Assert::stringNotEmpty($basePath, 'The base path must be a non-empty string. Got: %s');
 
@@ -662,10 +647,8 @@ final class Path
      * @since 1.0 Added method.
      * @since 2.0 Method now fails if $path or $basePath is not a string.
      */
-    public static function makeRelative($path, $basePath)
+    public static function makeRelative(string $path, string $basePath): string
     {
-        Assert::string($basePath, 'The base path must be a string. Got: %s');
-
         $path = static::canonicalize($path);
         $basePath = static::canonicalize($basePath);
 
@@ -745,10 +728,8 @@ final class Path
      * @since 1.0 Added method.
      * @since 2.0 Method now fails if $path is not a string.
      */
-    public static function isLocal($path)
+    public static function isLocal(string $path): bool
     {
-        Assert::string($path, 'The path must be a string. Got: %s');
-
         return '' !== $path && false === strpos($path, '://');
     }
 
@@ -759,7 +740,7 @@ final class Path
      * into forward slashes.
      *
      * ```php
-     * $basePath = Path::getLongestCommonBasePath(array(
+     * $basePath = Path::getLongestCommonBasePath(iterable(
      *     '/webmozart/css/style.css',
      *     '/webmozart/css/..'
      * ));
@@ -769,7 +750,7 @@ final class Path
      * The root is returned if no common base path can be found:
      *
      * ```php
-     * $basePath = Path::getLongestCommonBasePath(array(
+     * $basePath = Path::getLongestCommonBasePath(iterable(
      *     '/webmozart/css/style.css',
      *     '/puli/css/..'
      * ));
@@ -780,14 +761,14 @@ final class Path
      * returned.
      *
      * ```php
-     * $basePath = Path::getLongestCommonBasePath(array(
+     * $basePath = Path::getLongestCommonBasePath(iterable(
      *     'C:/webmozart/css/style.css',
      *     'D:/webmozart/css/..'
      * ));
      * // => null
      * ```
      *
-     * @param array $paths A list of paths.
+     * @param iterable $paths A list of paths.
      *
      * @return string|null The longest common base path in canonical form or
      *                     `null` if the paths are on different Windows
@@ -796,10 +777,8 @@ final class Path
      * @since 1.0 Added method.
      * @since 2.0 Method now fails if $paths are not strings.
      */
-    public static function getLongestCommonBasePath(array $paths)
+    public static function getLongestCommonBasePath(string ...$paths): string
     {
-        Assert::allString($paths, 'The paths must be strings. Got: %s');
-
         list($bpRoot, $basePath) = self::split(self::canonicalize(reset($paths)));
 
         for (next($paths); null !== key($paths) && '' !== $basePath; next($paths)) {
@@ -840,20 +819,14 @@ final class Path
      *
      * The result is a canonical path.
      *
-     * @param string[]|string $paths Path parts as parameters or array.
+     * @param string[]|string $paths Path parts as parameters or iterable.
      *
      * @return string The joint path.
      *
      * @since 2.0 Added method.
      */
-    public static function join($paths)
+    public static function join(string ...$paths): string
     {
-        if (!is_array($paths)) {
-            $paths = func_get_args();
-        }
-
-        Assert::allString($paths, 'The paths must be strings. Got: %s');
-
         $finalPath = null;
         $wasScheme = false;
 
@@ -872,7 +845,7 @@ final class Path
             }
 
             // Only add slash if previous part didn't end with '/' or '\'
-            if (!in_array(substr($finalPath, -1), array('/', '\\'))) {
+            if (!in_array(substr($finalPath, -1), ['/', '\\'])) {
                 $finalPath .= '/';
             }
 
@@ -916,10 +889,8 @@ final class Path
      * @since 1.0 Added method.
      * @since 2.0 Method now fails if $basePath or $ofPath is not a string.
      */
-    public static function isBasePath($basePath, $ofPath)
+    public static function isBasePath(string $basePath, string $ofPath): bool
     {
-        Assert::string($basePath, 'The base path must be a string. Got: %s');
-
         $basePath = self::canonicalize($basePath);
         $ofPath = self::canonicalize($ofPath);
 
@@ -941,20 +912,20 @@ final class Path
      * will always contain a trailing slash.
      *
      * list ($root, $path) = Path::split("C:/webmozart")
-     * // => array("C:/", "webmozart")
+     * // => iterable("C:/", "webmozart")
      *
      * list ($root, $path) = Path::split("C:")
-     * // => array("C:/", "")
+     * // => iterable("C:/", "")
      *
      * @param string $path The canonical path to split.
      *
-     * @return string[] An array with the root directory and the remaining
+     * @return string[] An iterable with the root directory and the remaining
      *                  relative path.
      */
-    private static function split($path)
+    private static function split(string $path): iterable
     {
         if ('' === $path) {
-            return array('', '');
+            return ['', ''];
         }
 
         // Remember scheme as part of the root, if any
@@ -983,7 +954,7 @@ final class Path
             }
         }
 
-        return array($root, $path);
+        return [$root, $path];
     }
 
     /**
@@ -993,7 +964,7 @@ final class Path
      *
      * @return string Lower case string
      */
-    private static function toLower($str)
+    private static function toLower(string $str): string
     {
         if (function_exists('mb_strtolower')) {
             return mb_strtolower($str, mb_detect_encoding($str));
@@ -1004,5 +975,6 @@ final class Path
 
     private function __construct()
     {
+        // static, only
     }
 }
